@@ -1,0 +1,102 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  /* Kanagawa extended tokens */
+  --color-kana-ink0: var(--kana-ink0);
+  --color-kana-ink1: var(--kana-ink1);
+  --color-kana-ink3: var(--kana-ink3);
+  --color-kana-blue: var(--kana-blue);
+  --color-kana-teal: var(--kana-teal);
+  --color-kana-green: var(--kana-green);
+  --color-kana-yellow: var(--kana-yellow);
+  --color-kana-orange: var(--kana-orange);
+  --color-kana-red: var(--kana-red);
+  --color-kana-violet: var(--kana-violet);
+  --color-kana-pink: var(--kana-pink);
+  --color-kana-gray: var(--kana-gray);
+}
+
+:root {
+  /* Kanagawa base palette */
+  --kana-ink0: #16161D;
+  --kana-ink1: #1F1F28;
+  --kana-ink3: #2A2A37;
+  --kana-ink4: #363646;
+  --kana-gray: #727169;
+  --kana-fg: #DCD7BA;
+  --kana-white: #C8C093;
+  --kana-blue: #7E9CD8;
+  --kana-teal: #7FB4CA;
+  --kana-green: #98BB6C;
+  --kana-yellow: #E6C384;
+  --kana-orange: #FFA066;
+  --kana-red: #FF5D62;
+  --kana-violet: #957FB8;
+  --kana-pink: #D27E99;
+  --kana-wave1: #2D4F67;
+  --kana-wave2: #658594;
+
+  /* Semantic tokens */
+  --background: #16161D;
+  --foreground: #DCD7BA;
+  --card: #1F1F28;
+  --card-foreground: #DCD7BA;
+  --primary: #7E9CD8;
+  --primary-foreground: #16161D;
+  --secondary: #2A2A37;
+  --secondary-foreground: #C8C093;
+  --muted: #2A2A37;
+  --muted-foreground: #727169;
+  --accent: #957FB8;
+  --accent-foreground: #DCD7BA;
+  --border: #363646;
+  --ring: #7E9CD8;
+  --radius: 3px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbars until hovering */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--kana-ink4); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--kana-gray); }
+
+/* Only show scrollbar on hover */
+.scroll-region { scrollbar-width: none; }
+.scroll-region:hover { scrollbar-width: thin; scrollbar-color: var(--kana-ink4) transparent; }
+.scroll-region::-webkit-scrollbar { width: 4px; }
+.scroll-region::-webkit-scrollbar-thumb { background: transparent; }
+.scroll-region:hover::-webkit-scrollbar-thumb { background: var(--kana-ink4); }
