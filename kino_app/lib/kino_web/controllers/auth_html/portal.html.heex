@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>
+      Kino · Account
+    </title><link rel="stylesheet" href="/assets/css/app.css" />
+  </head>
+  <body>
+    <main class="auth-shell">
+      <section class="auth-card">
+        <div class="auth-brand"><strong>KINO</strong><span>identity portal</span></div>
+        <%= if @mode == :login do %>
+          <h1>Enter the theater</h1>
+          <form action="/login" method="post" id="login-form">
+            <input type="hidden" name="_csrf_token" value={@csrf} />
+            <label>Username or email<input
+              name="account[identifier]"
+              autocomplete="username"
+              required
+            /></label>
+            <label>Password<input
+              name="account[password]"
+              type="password"
+              autocomplete="current-password"
+              required
+            /></label>
+            <label class="auth-check"><input
+              name="account[remember]"
+              value="true"
+              type="checkbox"
+            /> remember me</label>
+            <button type="submit">sign in ›</button>
+          </form>
+          <p class="auth-note">New here? Ask a Kino admin for an invitation.</p>
+        <% else %>
+          <h1>{if @mode == :setup, do: "Create the first admin", else: "Accept invitation"}</h1>
+          <form
+            action={if @mode == :setup, do: "/setup", else: "/signup"}
+            method="post"
+            id="registration-form"
+          >
+            <input type="hidden" name="_csrf_token" value={@csrf} />
+            <input :if={@mode == :signup} type="hidden" name="code" value={@code} />
+            <label>Email<input name="account[email]" type="email" autocomplete="email" required /></label>
+            <label>Username<input name="account[username]" pattern="[a-zA-Z0-9_-]{2,24}" required /></label>
+            <label>Display name<input name="account[display_name]" required /></label>
+            <label>Password<input
+              name="account[password]"
+              type="password"
+              minlength="8"
+              autocomplete="new-password"
+              required
+            /></label>
+            <button type="submit">create account ›</button>
+          </form>
+        <% end %>
+      </section>
+    </main>
+  </body>
+</html>

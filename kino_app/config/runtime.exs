@@ -22,6 +22,41 @@ end
 
 config :kino, KinoWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+if database_url = System.get_env("DATABASE_URL") do
+  config :kino, Kino.Repo, url: database_url
+end
+
+if username = System.get_env("KINO_BOOTSTRAP_ADMIN_USERNAME") do
+  password =
+    System.get_env("KINO_BOOTSTRAP_ADMIN_PASSWORD") ||
+      raise "KINO_BOOTSTRAP_ADMIN_PASSWORD is required with KINO_BOOTSTRAP_ADMIN_USERNAME"
+
+  config :kino, :bootstrap_admin,
+    username: username,
+    email: System.get_env("KINO_BOOTSTRAP_ADMIN_EMAIL", "#{username}@kino.local"),
+    display_name: System.get_env("KINO_BOOTSTRAP_ADMIN_NAME", "Kino Admin"),
+    password: password
+end
+
+if avatar_dir = System.get_env("KINO_AVATAR_BOOTSTRAP_DIR") do
+  config :kino, :avatar_bootstrap_dir, avatar_dir
+end
+
+if bucket = System.get_env("KINO_S3_BUCKET") do
+  config :kino, :media,
+    storage: Kino.Media.Storage.S3,
+    storage_bucket: bucket,
+    storage_prefix: System.get_env("KINO_S3_PREFIX", "kino/media"),
+    s3_endpoint: System.get_env("AWS_ENDPOINT_URL_S3"),
+    s3_public_endpoint:
+      System.get_env("KINO_S3_PUBLIC_ENDPOINT") || System.get_env("AWS_ENDPOINT_URL_S3"),
+    s3_region: System.get_env("AWS_REGION", "us-east-1")
+end
+
+if config_env() == :prod and is_nil(System.get_env("KINO_S3_BUCKET")) do
+  raise "KINO_S3_BUCKET is required in production; media must use durable object storage"
+end
+
 if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :kino, KinoWeb.Endpoint,

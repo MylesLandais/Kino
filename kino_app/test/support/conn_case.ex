@@ -31,7 +31,24 @@ defmodule KinoWeb.ConnCase do
     end
   end
 
-  setup _tags do
+  def register_and_log_in_user(conn, attrs \\ %{}) do
+    Kino.Accounts.ensure_rbac!()
+    suffix = System.unique_integer([:positive])
+
+    defaults = %{
+      "email" => "tester#{suffix}@example.com",
+      "username" => "tester#{suffix}",
+      "display_name" => "Tester",
+      "password" => "correct horse battery staple"
+    }
+
+    {:ok, user} = Kino.Accounts.bootstrap_admin(Map.merge(defaults, attrs))
+    {token, _ttl} = Kino.Accounts.create_session(user)
+    {Plug.Test.init_test_session(conn, %{"auth_token" => token}), user}
+  end
+
+  setup tags do
+    Kino.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

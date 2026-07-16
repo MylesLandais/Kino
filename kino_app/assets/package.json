@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "dependencies": {
+    "@pixiv/three-vrm": "3.4.2",
+    "three": "0.180.0"
+  }
+}

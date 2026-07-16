@@ -8,16 +8,44 @@ defmodule KinoWeb.Router do
     plug :put_root_layout, html: {KinoWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug KinoWeb.UserAuth, :fetch_current_user
+  end
+
+  pipeline :authenticated do
+    plug KinoWeb.UserAuth, :require_authenticated
   end
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
+  pipeline :media do
+    plug :accepts, ["html"]
+  end
+
   scope "/", KinoWeb do
     pipe_through :browser
+    get "/login", AuthController, :login_page
+    post "/login", AuthController, :login
+    get "/setup", AuthController, :setup_page
+    post "/setup", AuthController, :setup
+    get "/signup", AuthController, :signup_page
+    post "/signup", AuthController, :signup
+    delete "/logout", AuthController, :logout
+  end
 
+  scope "/", KinoWeb do
+    pipe_through [:browser, :authenticated]
     live "/", TheaterLive
+    live "/admin/users", AdminUsersLive
+    live "/admin/avatar", AdminAvatarLive
+    get "/avatar/assets/:id/content", AvatarAssetController, :show
+  end
+
+  scope "/", KinoWeb do
+    pipe_through :media
+
+    get "/media/:cache_key", MediaController, :show
   end
 
   # Other scopes may use custom stacks.

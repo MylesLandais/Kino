@@ -1,5 +1,29 @@
 import Config
 
+# Local Postgres uses unix-socket peer auth (TCP requires a password)
+config :kino, Kino.Repo,
+  socket_dir: "/run/postgresql",
+  database: "kino_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10
+
+# Preserve Kino's familiar local-only development login. Production never gets
+# an implicit account; configure its bootstrap explicitly through runtime env.
+config :kino, :bootstrap_admin,
+  username: "admin",
+  email: "admin@kino.local",
+  display_name: "Kino Admin",
+  password: "admin"
+
+config :kino,
+       :avatar_bootstrap_dir,
+       Path.expand("../../../Workspace-git/maya-unified/data", __DIR__)
+
+# yt-dlp is not on PATH on this NixOS host; pin the store path
+config :kino, :media,
+  ytdlp_bin: "/nix/store/h0nz3gf86c78gmw0nkzi0hdc5ry4z25i-yt-dlp-2026.06.09/bin/yt-dlp"
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

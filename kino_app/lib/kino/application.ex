@@ -9,11 +9,14 @@ defmodule Kino.Application do
   def start(_type, _args) do
     children = [
       KinoWeb.Telemetry,
+      Kino.Repo,
+      Kino.Accounts.Seeder,
       {DNSCluster, query: Application.get_env(:kino, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Kino.PubSub},
-      # Start a worker by calling: Kino.Worker.start_link(arg)
-      # {Kino.Worker, arg},
-      # Start to serve requests, typically the last entry
+      Kino.Avatar.Seeder,
+      {Oban, Application.fetch_env!(:kino, Oban)},
+      {Task.Supervisor, name: Kino.TaskSupervisor},
+      Kino.Theater.RoomSession,
       KinoWeb.Endpoint
     ]
 

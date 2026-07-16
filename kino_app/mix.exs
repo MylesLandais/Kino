@@ -41,6 +41,9 @@ defmodule Kino.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.8.9"},
+      {:ecto_sql, "~> 3.12"},
+      {:postgrex, ">= 0.0.0"},
+      {:oban, "~> 2.19"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.2.0"},
@@ -66,6 +69,8 @@ defmodule Kino.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
+      {:req, "~> 0.6.2", override: true},
+      {:req_s3, "~> 0.2.3"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"}
     ]
@@ -79,8 +84,16 @@ defmodule Kino.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "assets.setup", "assets.build"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      "assets.setup":
+        ["cmd npm install --prefix assets"] ++
+          if(external_asset_tools?(),
+            do: [],
+            else: ["tailwind.install --if-missing", "esbuild.install --if-missing"]
+          ),
       "assets.build": ["compile", "tailwind kino", "esbuild kino"],
       "assets.deploy": [
         "tailwind kino --minify",
@@ -89,5 +102,10 @@ defmodule Kino.MixProject do
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
     ]
+  end
+
+  defp external_asset_tools? do
+    System.get_env("MIX_TAILWIND_PATH") not in [nil, ""] and
+      System.get_env("MIX_ESBUILD_PATH") not in [nil, ""]
   end
 end
