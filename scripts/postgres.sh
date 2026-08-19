@@ -41,6 +41,10 @@ case "$cmd" in
     if running; then
       echo "PostgreSQL already running (PGHOST=$PGHOST PGDATA=$PGDATA)"
     else
+      if [[ -f "$PGDATA/postmaster.pid" ]]; then
+        echo "Removing stale postmaster.pid from a previous snapshot/boot"
+        rm -f "$PGDATA/postmaster.pid"
+      fi
       pg_ctl \
         -D "$PGDATA" \
         -l "$PGDATA/postgres.log" \
