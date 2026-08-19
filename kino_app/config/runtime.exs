@@ -26,6 +26,14 @@ if database_url = System.get_env("DATABASE_URL") do
   config :kino, Kino.Repo, url: database_url
 end
 
+if train_bin = System.get_env("VASTAI_LORA_TRAIN") do
+  config :kino, Adaptation, train_bin: train_bin
+end
+
+if eval_bin = System.get_env("VASTAI_LORA_EVAL") do
+  config :kino, Adaptation, eval_bin: eval_bin
+end
+
 if username = System.get_env("KINO_BOOTSTRAP_ADMIN_USERNAME") do
   password =
     System.get_env("KINO_BOOTSTRAP_ADMIN_PASSWORD") ||

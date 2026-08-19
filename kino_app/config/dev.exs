@@ -2,7 +2,7 @@ import Config
 
 # Local Postgres uses unix-socket peer auth (TCP requires a password)
 config :kino, Kino.Repo,
-  socket_dir: "/run/postgresql",
+  socket_dir: System.get_env("PGHOST", "/run/postgresql"),
   database: "kino_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,

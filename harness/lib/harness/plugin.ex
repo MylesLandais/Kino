@@ -41,11 +41,13 @@ defmodule Harness.Plugin do
 
   @doc "Plugin ids that must be ACTIVE before this plugin mounts."
   def dependencies(module) do
+    Code.ensure_loaded!(module)
     if function_exported?(module, :dependencies, 0), do: module.dependencies(), else: []
   end
 
   @doc "Service behaviours that must already be registered."
   def inject(module) do
+    Code.ensure_loaded!(module)
     if function_exported?(module, :inject, 0), do: module.inject(), else: []
   end
 end

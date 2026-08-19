@@ -41,3 +41,7 @@ Firecracker, desktop computer-use, recording, video analysis, and the experience
 3. Registrations are scoped and reversible.
 4. Durable facts are event-sourced; model-visible state is reconstructable from the log.
 5. Runtime graph (what is executing) is not the experience graph (what happened).
+
+## Four-boundary split
+
+Weight adaptation lives in Kino's Adaptation Substrate (`kino_app/lib/adaptation`, see `kino_app/ADAPTATION.md`), not in this Mix app. Harness must not grow a training loop or inject trajectories into live context.

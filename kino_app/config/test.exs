@@ -1,7 +1,7 @@
 import Config
 
 config :kino, Kino.Repo,
-  socket_dir: "/run/postgresql",
+  socket_dir: System.get_env("PGHOST", "/run/postgresql"),
   database: "kino_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 4
@@ -14,6 +14,11 @@ config :kino, :media,
   cache_dir: Path.join(System.tmp_dir!(), "kino_media_test"),
   # Resolve inline so tests stay deterministic and inside the DB sandbox.
   resolve_mode: :sync
+
+config :kino, Adaptation,
+  provider: Adaptation.Providers.Mock,
+  train_bin: "vastai-lora-train",
+  eval_bin: "vastai-lora-eval"
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
