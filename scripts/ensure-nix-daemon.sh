@@ -32,11 +32,13 @@ if [[ -e "$SOCKET" ]] && ! daemon_ready; then
   fi
 fi
 
+# nix-daemon --daemon does not detach on these Cloud Agent VMs.
 if sudo -n true 2>/dev/null; then
-  sudo -n "$DAEMON" --daemon
+  nohup sudo -n "$DAEMON" --daemon >/tmp/nix-daemon.log 2>&1 &
 else
-  "$DAEMON" --daemon
+  nohup "$DAEMON" --daemon >/tmp/nix-daemon.log 2>&1 &
 fi
+disown || true
 
 for _ in $(seq 1 50); do
   if daemon_ready; then
