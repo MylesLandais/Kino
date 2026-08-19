@@ -6,6 +6,8 @@ Run Kino through the repository-root FHS shell (`./launch.sh` or `nix run .#fhs 
 
 PostgreSQL is the user-space cluster from `scripts/postgres.sh` (`PGHOST` unix socket). After migrate, `ontology_graph` is available for `GRAPH_TABLE` queries. Default local login is `admin` / `admin`.
 
+Application secrets are stored in **OpenBao**, not in the repository. The FHS shell provides the `bao` CLI. Set `BAO_ADDR`, `BAO_TOKEN`, and `KINO_OPENBAO_PATH`, then source `scripts/openbao-env.sh` (launch and Cloud start already do). Do not add `.env` files or commit credentials.
+
 ## Project guidelines
 
 - Use `mix precommit` alias when you are done with all changes and fix any pending issues

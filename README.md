@@ -8,6 +8,8 @@ Kino uses a Nix **FHS** development shell so Elixir, Node, esbuild/tailwind, yt-
 
 The flake also starts a **user-space PostgreSQL 19** cluster with SQL/PGQ property graph queries (`CREATE PROPERTY GRAPH` / `GRAPH_TABLE`) over the music ontology tables. Unix-socket peer auth is used; the socket directory is exported as `PGHOST`.
 
+**Secrets come from OpenBao** (`bao` in the FHS shell), not from files in this repo. Point the CLI at your cluster with `BAO_ADDR` / `BAO_TOKEN` (Vault-compatible `VAULT_*` names also work). Set `KINO_OPENBAO_PATH` to a KV path whose fields are the usual Kino env names (`SECRET_KEY_BASE`, `AWS_*`, `SPOTIFY_*`, …); `./launch.sh` and Cloud Agent start source `scripts/openbao-env.sh` and export them. Local Postgres/dev still starts when OpenBao is unset.
+
 ```bash
 ./launch.sh
 ```

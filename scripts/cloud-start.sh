@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT/scripts/pg-env.sh"
+# shellcheck disable=SC1091
+source "$ROOT/scripts/openbao-env.sh"
 
 "$ROOT/scripts/postgres.sh" start
 

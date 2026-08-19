@@ -15,6 +15,8 @@ if ! command -v mix >/dev/null 2>&1; then
   exit 1
 fi
 
+# shellcheck disable=SC1091
+source "$ROOT/scripts/openbao-env.sh"
 "$ROOT/scripts/postgres.sh" start
 
 cd "$ROOT/kino_app"

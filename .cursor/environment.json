@@ -12,7 +12,7 @@
     {
       "name": "phoenix",
       "command": "./scripts/with-fhs.sh ./launch.sh",
-      "description": "Phoenix LiveView theater (Nix FHS + PostgreSQL 19 SQL/PGQ) at http://localhost:4000"
+      "description": "Phoenix LiveView theater (Nix FHS + PostgreSQL 19 SQL/PGQ + OpenBao secrets) at http://localhost:4000"
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  description = "Kino theater — FHS Nix development shell with PostgreSQL 19 SQL/PGQ";
+  description = "Kino theater — FHS Nix development shell with PostgreSQL 19 SQL/PGQ and OpenBao";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -83,6 +83,7 @@
           esbuild
           tailwindcss_4
           yt-dlp
+          openbao
         ];
 
         kinoProfile = ''
