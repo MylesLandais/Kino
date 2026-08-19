@@ -2,9 +2,10 @@ defmodule Adaptation.Providers.CLI do
   @moduledoc """
   v1 JSON contract for Vast.ai LoRA CLI wrappers.
 
-  Sign-off target for `vastai-lora-train` / `vastai-lora-eval`. Until those
-  binaries exist, `Adaptation.Providers.LoRA` still speaks this schema so a
-  script drop-in does not change the supervision tree.
+  Wrappers live at `scripts/vastai-lora-train` and `scripts/vastai-lora-eval`.
+  They wrap Kohya / AI Toolkit via `VASTAI_LORA_TRAIN_BACKEND` /
+  `VASTAI_LORA_EVAL_BACKEND`. `--stub` (or `ADAPTATION_CLI_STUB=1`) emits the
+  same JSON without GPUs so the OTP tree can be wired independently.
 
   Train (`--output-format json` on stdout):
 
@@ -30,8 +31,8 @@ defmodule Adaptation.Providers.CLI do
   Failure is `{"schema_version": 1, "ok": false, "error": "reason"}` or a
   non-zero exit. Args:
 
-      vastai-lora-train --dataset PATH --base-model NAME [--config PATH] --output-format json
-      vastai-lora-eval --artifact URI --suites suite1,suite2 --output-format json
+      vastai-lora-train --dataset PATH --base-model NAME [--config PATH] --output-format json [--stub]
+      vastai-lora-eval --artifact URI --suites suite1,suite2 --output-format json [--stub]
   """
 
   @schema_version 1
@@ -41,9 +42,10 @@ defmodule Adaptation.Providers.CLI do
   def train_args(dataset_path, base_model, config) do
     ["--dataset", dataset_path, "--base-model", base_model, "--output-format", "json"]
     |> maybe_config(config)
+    |> maybe_stub(config)
   end
 
-  def eval_args(artifact_uri, suites) do
+  def eval_args(artifact_uri, suites, config \\ %{}) do
     [
       "--artifact",
       artifact_uri,
@@ -52,11 +54,13 @@ defmodule Adaptation.Providers.CLI do
       "--output-format",
       "json"
     ]
+    |> maybe_stub(config)
   end
 
   def parse_train(stdout, exit_status) do
     with :ok <- ok_status(exit_status),
          {:ok, payload} <- decode(stdout),
+         :ok <- require_schema(payload),
          :ok <- require_ok(payload),
          {:ok, uri} <- fetch_string(payload, "artifact_uri"),
          {:ok, version} <- fetch_string(payload, "version") do
@@ -73,6 +77,7 @@ defmodule Adaptation.Providers.CLI do
   def parse_eval(stdout, exit_status) do
     with :ok <- ok_status(exit_status),
          {:ok, payload} <- decode(stdout),
+         :ok <- require_schema(payload),
          :ok <- require_ok(payload) do
       {:ok, Map.get(payload, "suites", %{})}
     end
@@ -83,6 +88,10 @@ defmodule Adaptation.Providers.CLI do
       path when is_binary(path) and path != "" -> args ++ ["--config", path]
       _ -> args
     end
+  end
+
+  defp maybe_stub(args, config) do
+    if config[:stub] || config["stub"], do: args ++ ["--stub"], else: args
   end
 
   defp ok_status(0), do: :ok
@@ -100,6 +109,10 @@ defmodule Adaptation.Providers.CLI do
       end
     end) || {:error, {:invalid_json, stdout}}
   end
+
+  defp require_schema(%{"schema_version" => 1}), do: :ok
+  defp require_schema(%{"schema_version" => version}), do: {:error, {:unsupported_schema, version}}
+  defp require_schema(_), do: {:error, :missing_schema_version}
 
   defp require_ok(%{"ok" => false, "error" => reason}), do: {:error, reason}
   defp require_ok(%{"ok" => false}), do: {:error, :cli_failed}

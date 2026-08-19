@@ -17,8 +17,8 @@ config :kino, :media,
 
 config :kino, Adaptation,
   provider: Adaptation.Providers.Mock,
-  train_bin: "vastai-lora-train",
-  eval_bin: "vastai-lora-eval"
+  train_bin: Path.expand("../../scripts/vastai-lora-train", __DIR__),
+  eval_bin: Path.expand("../../scripts/vastai-lora-eval", __DIR__)
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

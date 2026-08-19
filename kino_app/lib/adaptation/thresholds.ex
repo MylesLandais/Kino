@@ -37,7 +37,7 @@ defmodule Adaptation.Thresholds do
     suite_metrics = Map.get(metrics, suite) || Map.get(metrics, to_string(suite)) || %{}
 
     Map.get(suite_metrics, metric) ||
-      Map.get(suite_metrics, String.to_atom(metric)) ||
+      Map.get(suite_metrics, :score) ||
       get_in(suite_metrics, [Access.key("score")])
   end
 

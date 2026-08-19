@@ -20,8 +20,8 @@ config :kino, Oban,
 # Live agents hold an adapter *reference* only — never weights.
 config :kino, Adaptation,
   provider: Adaptation.Providers.LoRA,
-  train_bin: "vastai-lora-train",
-  eval_bin: "vastai-lora-eval"
+  train_bin: Path.expand("../../scripts/vastai-lora-train", __DIR__),
+  eval_bin: Path.expand("../../scripts/vastai-lora-eval", __DIR__)
 
 config :kino, :media,
   cache_dir: nil,

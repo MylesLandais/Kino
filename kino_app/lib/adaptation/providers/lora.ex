@@ -51,7 +51,7 @@ defmodule Adaptation.Providers.LoRA do
   @impl true
   def evaluate(artifact, suites, config) do
     bin = bin(config, :eval_bin, "VASTAI_LORA_EVAL", "vastai-lora-eval")
-    args = CLI.eval_args(artifact.artifact_uri, suites)
+    args = CLI.eval_args(artifact.artifact_uri, suites, config)
     run(bin, args, &CLI.parse_eval/2)
   end
 
