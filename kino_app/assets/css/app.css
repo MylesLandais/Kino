@@ -1,4 +1,5 @@
 @import "tailwindcss" source(none);
+@import "tint/styles.css";
 @import "../vendor/plyr/plyr.css";
 @import "phoenix-colocated/kino/colocated.css";
 @source "../css";

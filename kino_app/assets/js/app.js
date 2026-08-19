@@ -29,12 +29,13 @@ import MessageList from "./hooks/message_list"
 import SetList from "./hooks/set_list"
 import TheaterPreferences from "./hooks/theater_preferences"
 import AvatarRenderer from "./hooks/avatar_renderer"
+import TintAgentChat from "./hooks/tint_agent_chat"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, AvatarRenderer, MessageList, SetList, TheaterPreferences, VideoPlayer},
+  hooks: {...colocatedHooks, AvatarRenderer, MessageList, SetList, TheaterPreferences, VideoPlayer, TintAgentChat},
 })
 
 // Show progress bar on live navigation and form submits

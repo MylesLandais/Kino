@@ -538,7 +538,14 @@ defmodule KinoWeb.TheaterLive do
             </div>
           </div>
 
-          <div id="messages" class="messages" phx-update="stream" phx-hook="MessageList">
+          <!-- Tint vertical slice keeps LiveView’s original form/stream as a
+               hidden compatibility layer for tests and non-WS fallbacks. -->
+          <div
+            id="messages"
+            class="messages hidden"
+            phx-update="stream"
+            phx-hook="MessageList"
+          >
             <article
               :for={{id, msg} <- @streams.messages}
               id={id}
@@ -565,14 +572,14 @@ defmodule KinoWeb.TheaterLive do
             </article>
           </div>
 
-          <div :if={@command_hint} id="command-hint" class="command-hint">{@command_hint}</div>
+          <div :if={@command_hint} id="command-hint" class="command-hint hidden">{@command_hint}</div>
 
           <.form
             for={@form}
             id="message-form"
             phx-change="command_changed"
             phx-submit="send"
-            class="composer-wrap"
+            class="composer-wrap hidden"
           >
             <div class="composer">
               <span>›</span>
@@ -586,6 +593,13 @@ defmodule KinoWeb.TheaterLive do
             </div>
             <footer>enter to send <span>/play /wish /pause /resume</span></footer>
           </.form>
+
+          <div
+            id="tint-agent-chat"
+            class="tint-agent-chat"
+            phx-hook="TintAgentChat"
+            phx-update="ignore"
+          />
         </aside>
       </main>
     </Layouts.app>
