@@ -18,6 +18,7 @@ The launcher enters `nix run .#fhs` when necessary, starts PostgreSQL 19 if need
 ./launch.sh --setup-only          # deps, database, assets; no server
 nix develop                       # interactive FHS shell
 nix run .#fhs -- mix test         # run a command inside the FHS shell
+direnv allow                      # optional: auto-enter the FHS shell
 ./scripts/postgres.sh status      # from inside the FHS shell
 ```
 

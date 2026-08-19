@@ -23,6 +23,7 @@
           openssl
           openssl.out
           libffi
+          libxcrypt
           ncurses
           readline
           curl
@@ -39,6 +40,16 @@
           krb5
           expat
           libseccomp
+          acl
+          attr
+          libcap
+          keyutils
+          pcre2
+          libidn2
+          nghttp2
+          dbus
+          systemd
+          glib
         ];
 
         fhsTools = with pkgs; [
