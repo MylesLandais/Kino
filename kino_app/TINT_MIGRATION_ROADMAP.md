@@ -2,60 +2,72 @@
 
 Goal: replace legacy theater UI surfaces with Tint (React) while preserving Kino's OTP/PubSub backend and `/agent` websocket contract.
 
-## Current status
+## Status: complete (phases 1–5)
 
-- ✅ `/agent` websocket transport added (`KinoWeb.AgentSocket`, `KinoWeb.AgentChannel`)
-- ✅ First Tint vertical slice mounted (`#tint-agent-chat`)
-- ✅ Shared command handling extracted into `Kino.Theater.ChatCommands`
-- ✅ Existing LiveView tests remain green via temporary hidden compatibility DOM
+The theater route is now a thin LiveView shell that mounts a unified Tint/React app at `#tint-theater`. All interaction flows through the `/agent` websocket channel.
 
-## Principles
+### Phase 1 — Chat parity ✅
 
-1. Keep backend authority in Elixir (PubSub, Oban, supervision trees).
-2. Keep UI contracts transport-agnostic from Tint's perspective (session adapter/provider seams).
-3. Replace surfaces incrementally; avoid freeze-and-rewrite.
-4. Remove compatibility scaffolding only after equivalent Tint behavior is proven.
-
-## Phase 1 — Chat parity (in progress)
-
-- [x] Tint chat list + composer mounted in theater panel
+- [x] Tint chat list + composer (`TheaterChat`)
 - [x] `/agent` channel receives and forwards room events
-- [ ] Map `agent_event.payload` into richer Tint part types (`tool`, `sources`, `artifact`)
-- [ ] Add slash-command hint UX in React composer
-- [ ] Move pipeline progress card into Tint component state
+- [x] Rich agent payload mapping (`tool`, `sources`, `artifact`, `error` parts)
+- [x] Slash-command hint UX in composer
+- [x] Pipeline progress card with Tint-styled progress bar
+- [x] Removed legacy `MessageList` hook and hidden LiveView chat DOM
 
-Exit criteria:
-- Hidden `#messages` and `#message-form` can be removed without test regressions.
+### Phase 2 — Media and now-playing parity ✅
 
-## Phase 2 — Media and now-playing parity
+- [x] Tint `VideoPlayer` for theater playback (`TheaterPlayer`)
+- [x] Playback state bound from `/agent` `playback_updated` / `theater_snapshot`
+- [x] Server-authoritative desired/observed convergence preserved
 
-- [ ] Introduce Tint media surfaces for now-playing rail and playback state badges
-- [ ] Bind playback state from PubSub/`/agent` events
-- [ ] Preserve existing video + avatar hooks until equivalent React wrappers are live
+### Phase 3 — Setlist/track interaction parity ✅
 
-Exit criteria:
-- LiveView-only playback shell no longer required for core theater interaction.
+- [x] Setlist ported to React (`TheaterSetlist`) with seek, like, share, link expansion
+- [x] `RoomSession` + `Media` APIs unchanged; UI is a pure client swap
+- [x] Listen audit + qualified plays moved to `Kino.Theater.ListenAudit` via channel
 
-## Phase 3 — Setlist/track interaction parity
+### Phase 4 — Live channel modes ✅
 
-- [ ] Port setlist row interactions (seek/like/share/link-expansion) into Tint React components
-- [ ] Keep existing `RoomSession` and `Media` APIs; UI is a pure client swap
+- [x] Default mode: `chat-only`
+- [x] Capability negotiation: `negotiate_capabilities` / `set_channel_mode`
+- [x] Modes: `chat-only`, `live-audio`, `live-video` (control plane on `/agent`)
 
-Exit criteria:
-- Setlist behavior parity with current keyboard/mouse interactions.
+### Phase 5 — Cleanup ✅
 
-## Phase 4 — Live channel modes
+- [x] Legacy LiveView theater markup removed from `TheaterLive`
+- [x] Retired hooks: `VideoPlayer`, `SetList`, `MessageList`, `TheaterPreferences`, `AvatarRenderer`, `TintAgentChat`
+- [x] Legacy `.kino-shell` theater CSS removed; Tint theme drives layout
+- [x] Integration tests for `/agent` channel theater contract
 
-- [ ] Default mode: group chat + rich hypermedia
-- [ ] Live mode: add control events for audio/video session lifecycle
-- [ ] Introduce channel capability negotiation (`chat-only`, `live-audio`, `live-video`)
+## Architecture
 
-Exit criteria:
-- “Twitch + Discord + ChatGPT” channel model fully represented by `/agent` event contract.
+```
+TheaterLive (auth + mount)
+    └── #tint-theater [TintTheater hook]
+            └── TintTheaterApp (React)
+                    ├── TheaterPlayer (tint/video-player)
+                    ├── TheaterSetlist
+                    ├── TheaterAvatar
+                    └── TheaterChat (tint/chat)
+                            ↕
+                    AgentClient → /agent → AgentChannel
+                            ↕
+                    PubSub (room:lobby) ← RoomSession, Media, Avatar
+```
 
-## Phase 5 — Cleanup
+## Key files
 
-- [ ] Remove temporary hidden compatibility DOM in `TheaterLive`
-- [ ] Remove unused legacy hooks/styles once replaced
-- [ ] Add integration tests for `/agent` channel events and command dispatch
+| File | Role |
+|------|------|
+| `assets/js/theater/TintTheaterApp.tsx` | Root React theater shell |
+| `assets/js/theater/agent_client.ts` | Phoenix channel client |
+| `lib/kino_web/channels/agent_channel.ex` | Websocket contract |
+| `lib/kino/theater/snapshot.ex` | Theater state payloads |
+| `lib/kino/theater/listen_audit.ex` | Qualified play tracking |
 
+## Out of scope (future)
+
+- Admin pages (`admin_*_live`) — still LiveView
+- Full login/auth with Tint `SignInForm` (join form uses Tint utility classes)
+- Live A/V transport (WebRTC) — modes are negotiated; media transport is a follow-on
