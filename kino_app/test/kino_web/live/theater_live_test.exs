@@ -24,41 +24,9 @@ defmodule KinoWeb.TheaterLiveTest do
     {:ok, view, _html} = live(conn, ~p"/")
 
     assert has_element?(view, "#kino-theater.kino-shell")
-    assert has_element?(view, "#messages[phx-update=stream]")
-    assert has_element?(view, "#message-form")
+    assert has_element?(view, "#tint-agent-chat[phx-hook=TintAgentChat]")
     assert has_element?(view, ".empty-state", "NO SOURCE")
     refute has_element?(view, "#theater-video")
-  end
-
-  test "shows a contextual slash-command hint", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
-
-    view
-    |> form("#message-form", %{"message" => "/play"})
-    |> render_change()
-
-    assert has_element?(view, "#command-hint", "fetch and cache with yt-dlp")
-  end
-
-  test "/play enqueues a download job and renders the pending agent message", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
-
-    view
-    |> form("#message-form", %{"message" => "/play https://www.youtube.com/watch?v=abc"})
-    |> render_submit()
-
-    assert_enqueued(worker: Kino.Media.DownloadWorker)
-    assert render(view) =~ "Resolving video metadata"
-  end
-
-  test "agent events broadcast on the room topic are rendered", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
-
-    Media.broadcast_agent(:working, "Resolved: Stub Video — enqueueing yt-dlp download", %{
-      cache_key: "k1"
-    })
-
-    assert render(view) =~ "enqueueing yt-dlp download"
   end
 
   test "setlist column renders chapters, seeks, and toggles likes", %{conn: conn} do

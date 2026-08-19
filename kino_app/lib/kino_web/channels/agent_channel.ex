@@ -15,7 +15,13 @@ defmodule KinoWeb.AgentChannel do
   def join("agent:lobby", _payload, socket) do
     user = socket.assigns.current_user
     Phoenix.PubSub.subscribe(Kino.PubSub, Media.topic())
+    send(self(), :after_join)
+
     {:ok, %{username: user.username}, socket}
+  end
+
+  def handle_in("command_hint", %{"text" => text}, socket) when is_binary(text) do
+    {:reply, {:ok, %{hint: ChatCommands.command_hint(text)}}, socket}
   end
 
   def handle_in("chat_send", %{"text" => text}, socket) when is_binary(text) do
@@ -23,12 +29,17 @@ defmodule KinoWeb.AgentChannel do
     text = String.trim(text)
 
     if text == "" do
-      {:noreply, socket}
+      {:reply, {:ok, %{status: "noop"}}, socket}
     else
       case ChatCommands.execute(text, user) do
-        :ok -> {:noreply, socket}
-        {:error, reason} -> {:noreply, push_agent_error(socket, reason)}
-        :noop -> {:noreply, socket}
+        :ok ->
+          {:reply, {:ok, %{status: "ok"}}, socket}
+
+        {:error, reason} ->
+          {:reply, {:error, %{reason: inspect(reason)}}, push_agent_error(socket, reason)}
+
+        :noop ->
+          {:reply, {:ok, %{status: "noop"}}, socket}
       end
     end
   end
@@ -46,6 +57,22 @@ defmodule KinoWeb.AgentChannel do
 
   def handle_info({:pipeline_progress, progress}, socket) do
     push(socket, "pipeline_progress", %{progress: progress})
+    {:noreply, socket}
+  end
+
+  def handle_info(:after_join, socket) do
+    push(socket, "chat_message", %{
+      msg: %{
+        id: System.unique_integer([:positive]),
+        type: :system,
+        timestamp: Calendar.strftime(Time.utc_now(), "%H:%M"),
+        user: nil,
+        text: "kino session started — /play <url> to queue a video",
+        state: nil,
+        payload: %{}
+      }
+    })
+
     {:noreply, socket}
   end
 

@@ -3,11 +3,7 @@ defmodule KinoWeb.TheaterLive do
 
   alias Kino.Media
   alias Kino.Media.SetBroker
-  alias Kino.Theater.ChatCommands
   alias Kino.Theater.RoomSession
-
-  # Keep only the most recent messages in the stream (negative = keep tail).
-  @message_limit -200
 
   @impl true
   def mount(_params, session, socket) do
@@ -31,9 +27,6 @@ defmodule KinoWeb.TheaterLive do
       |> assign(:page_title, "Theater")
       |> assign(:username, username)
       |> assign(:current_scope, %{user: user})
-      |> assign(:form, to_form(%{"message" => ""}))
-      |> assign(:command_hint, nil)
-      |> assign(:pipeline, nil)
       |> assign(:tracklist_open, true)
       |> assign(:setlist_mode, "overlay")
       |> assign(:listen_audit, nil)
@@ -41,11 +34,6 @@ defmodule KinoWeb.TheaterLive do
       |> assign(:play_counts, %{})
       |> assign(:set_resolutions, %{})
       |> assign(:expanded_track_links, MapSet.new())
-      |> stream(
-        :messages,
-        [message(:system, "kino session started — /play <url> to queue a video")],
-        limit: @message_limit
-      )
       |> assign_playback(RoomSession.current())
 
     {:ok, socket |> push_playback() |> push_avatar_profile()}
@@ -58,33 +46,6 @@ defmodule KinoWeb.TheaterLive do
 
   def handle_event("playback_request", _params, socket) do
     {:reply, playback_payload(socket.assigns.playback), socket}
-  end
-
-  def handle_event("send", %{"message" => text}, socket) do
-    text = String.trim(text)
-
-    socket =
-      socket
-      |> assign(:form, to_form(%{"message" => ""}))
-      |> assign(:command_hint, nil)
-
-    case ChatCommands.execute(text, socket.assigns.current_scope.user) do
-      {:error, reason} ->
-        Media.broadcast_agent(:error, "Could not process message — #{inspect(reason)}")
-        {:noreply, socket}
-
-      _ ->
-        {:noreply, socket}
-    end
-  end
-
-  def handle_event("command_changed", %{"message" => text}, socket) do
-    hint = ChatCommands.command_hint(text)
-
-    {:noreply,
-     socket
-     |> assign(:form, to_form(%{"message" => text}))
-     |> assign(:command_hint, hint)}
   end
 
   def handle_event(
@@ -146,29 +107,6 @@ defmodule KinoWeb.TheaterLive do
   def handle_event("ignore_track_click", _params, socket), do: {:noreply, socket}
 
   @impl true
-  def handle_info({:chat_message, msg}, socket) do
-    {:noreply, append_message(socket, msg)}
-  end
-
-  def handle_info({:agent_event, %{state: state, text: text, payload: payload}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:pipeline, pipeline_from_agent(state, text, socket.assigns.pipeline))
-     |> append_message(message(:agent, text, state: state, payload: payload))}
-  end
-
-  def handle_info({:pipeline_progress, progress}, socket) do
-    pipeline = %{
-      stage: "caching",
-      text: "caching full quality",
-      percent: progress.percent,
-      speed: progress[:speed],
-      eta: progress[:eta]
-    }
-
-    {:noreply, assign(socket, :pipeline, pipeline)}
-  end
-
   def handle_info({:reactions_updated, asset_id}, socket) do
     if socket.assigns.playback.media_id == asset_id do
       {:noreply, assign(socket, :reactions, Media.reactions_for(asset_id))}
@@ -470,73 +408,6 @@ defmodule KinoWeb.TheaterLive do
           <header><span>CHAT</span><small><i class="online-dot"></i>1</small></header>
           <nav><strong>{@username}</strong></nav>
 
-          <div :if={@pipeline} id="pipeline-card" class="pipeline-card">
-            <div class="pipeline-head">
-              <span class="pipeline-stage">{@pipeline.stage}</span>
-              <small :if={@pipeline[:speed]}>{@pipeline[:speed]} · ETA {@pipeline[:eta]}</small>
-            </div>
-            <p>{@pipeline[:text]}</p>
-            <div :if={@pipeline[:percent]} class="pipeline-bar">
-              <i style={"width: #{@pipeline.percent}%"}></i>
-            </div>
-          </div>
-
-          <!-- Tint vertical slice keeps LiveView’s original form/stream as a
-               hidden compatibility layer for tests and non-WS fallbacks. -->
-          <div
-            id="messages"
-            class="messages hidden"
-            phx-update="stream"
-            phx-hook="MessageList"
-          >
-            <article
-              :for={{id, msg} <- @streams.messages}
-              id={id}
-              class={"msg #{msg.type} #{msg.state} #{if msg.user == @username, do: "own"}"}
-            >
-              <p :if={msg.type == :system} class="msg-pill">{msg.text}</p>
-              <%= if msg.type != :system do %>
-                <div :if={msg.type == :agent} class="msg-meta">
-                  <span class={"agent-state #{msg.state}"}>
-                    {state_icon(msg.state)} kino-agent · {msg.state}
-                  </span>
-                </div>
-                <div :if={msg.type == :user && msg.user != @username} class="msg-meta">
-                  <span class="msg-author">{msg.user}</span>
-                </div>
-                <div class="bubble">
-                  <p>{msg.text}</p>
-                  <div :if={map_size(msg.payload) > 0} class="payload">
-                    <code :for={{key, value} <- msg.payload}>{key}: {value}</code>
-                  </div>
-                  <time>{msg.timestamp}</time>
-                </div>
-              <% end %>
-            </article>
-          </div>
-
-          <div :if={@command_hint} id="command-hint" class="command-hint hidden">{@command_hint}</div>
-
-          <.form
-            for={@form}
-            id="message-form"
-            phx-change="command_changed"
-            phx-submit="send"
-            class="composer-wrap hidden"
-          >
-            <div class="composer">
-              <span>›</span>
-              <input
-                id="message-input"
-                name="message"
-                value={@form[:message].value}
-                placeholder="message or /play <url>"
-                autocomplete="off"
-              />
-            </div>
-            <footer>enter to send <span>/play /wish /pause /resume</span></footer>
-          </.form>
-
           <div
             id="tint-agent-chat"
             class="tint-agent-chat"
@@ -592,14 +463,6 @@ defmodule KinoWeb.TheaterLive do
       do: push_event(socket, "avatar_profile", Kino.Avatar.profile_payload()),
       else: socket
   end
-
-  defp pipeline_from_agent(:pending, text, _prev),
-    do: %{stage: "resolving", text: text, percent: nil}
-
-  defp pipeline_from_agent(:working, text, prev),
-    do: %{stage: "working", text: text, percent: prev[:percent]}
-
-  defp pipeline_from_agent(_success_or_error, _text, _prev), do: nil
 
   defp current_entry?(entry, position) do
     start = entry["start_seconds"] || 0
@@ -730,15 +593,6 @@ defmodule KinoWeb.TheaterLive do
     |> String.upcase()
   end
 
-  defp state_icon(:pending), do: "○"
-  defp state_icon(:working), do: "◌"
-  defp state_icon(:success), do: "●"
-  defp state_icon(:error), do: "✗"
-  defp state_icon(_state), do: "·"
-
-  defp append_message(socket, message),
-    do: stream_insert(socket, :messages, message, limit: @message_limit)
-
   defp format_time(nil), do: "0:00"
 
   defp format_time(seconds) do
@@ -752,17 +606,5 @@ defmodule KinoWeb.TheaterLive do
     else
       "#{minutes}:#{String.pad_leading(Integer.to_string(remaining), 2, "0")}"
     end
-  end
-
-  defp message(type, text, opts \\ []) do
-    %{
-      id: System.unique_integer([:positive]),
-      type: type,
-      timestamp: Calendar.strftime(Time.utc_now(), "%H:%M"),
-      user: Keyword.get(opts, :user),
-      text: text,
-      state: Keyword.get(opts, :state),
-      payload: Keyword.get(opts, :payload, %{})
-    }
   end
 end

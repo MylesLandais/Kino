@@ -10,6 +10,6 @@ defmodule KinoWeb.PageControllerTest do
     {conn, _user} = register_and_log_in_user(conn)
     conn = get(conn, ~p"/")
 
-    assert html_response(conn, 200) =~ "kino session started"
+    assert html_response(conn, 200) =~ "tint-agent-chat"
   end
 end

@@ -6,6 +6,7 @@ import {
   ChatComposer,
   ChatConversation,
   ChatMessageList,
+  type ChatComposerState,
   type ChatMessageData,
 } from "tint/chat"
 
@@ -95,7 +96,11 @@ function TintAgentChatApp() {
   const [currentActorId, setCurrentActorId] = useState<string | undefined>(undefined)
   const [messages, setMessages] = useState<readonly ChatMessageData[]>([])
   const [draft, setDraft] = useState("")
+  const [composerState, setComposerState] = useState<ChatComposerState>("idle")
+  const [hint, setHint] = useState<string | null>(null)
+  const [pipelineText, setPipelineText] = useState<string | null>(null)
   const seqRef = useRef(0)
+  const channelRef = useRef<any>(null)
 
   const phoenixSocket = useMemo(() => new Socket("/agent", {params: {}}), [])
 
@@ -103,6 +108,7 @@ function TintAgentChatApp() {
     phoenixSocket.connect()
 
     const channel = phoenixSocket.channel("agent:lobby", {})
+    channelRef.current = channel
 
     channel
       .join()
@@ -121,14 +127,19 @@ function TintAgentChatApp() {
 
     channel.on("agent_event", ({state, text, payload}) => {
       const seq = ++seqRef.current
+      setComposerState(state === "working" || state === "pending" ? "streaming" : "idle")
       setMessages((prev) => [
         ...prev,
         toTintMessageFromAgentEvent({seq, state, text, payload: payload || {}}),
       ])
     })
 
-    channel.on("pipeline_progress", (_payload) => {
-      // Pipeline is rendered by LiveView in v1; later we can mirror it here.
+    channel.on("pipeline_progress", ({progress}) => {
+      if (progress?.percent) {
+        setPipelineText(`caching full quality · ${progress.percent}%`)
+      } else {
+        setPipelineText("caching full quality")
+      }
     })
 
     return () => {
@@ -149,17 +160,27 @@ function TintAgentChatApp() {
         loading={false}
         emptyState="No messages yet."
       />
+      {pipelineText ? <div className="px-3 pb-1 text-xs text-tint-muted">{pipelineText}</div> : null}
+      {hint ? <div className="px-3 pb-1 text-xs text-tint-warning">{hint}</div> : null}
       <ChatComposer
         value={draft}
-        onValueChange={setDraft}
+        onValueChange={(value) => {
+          setDraft(value)
+          channelRef.current
+            ?.push("command_hint", {text: value})
+            .receive("ok", ({hint: nextHint}: {hint: string | null}) => setHint(nextHint))
+        }}
         placeholder="message or /play <url>"
-        state="idle"
+        state={composerState}
         submitLabel="Send"
+        onStop={() => setComposerState("idle")}
         onSubmit={(payload) => {
           const text = payload.text
           if (!text.trim()) return
-          phoenixSocket.push("chat_send", {text})
+          channelRef.current?.push("chat_send", {text})
           setDraft("")
+          setHint(null)
+          setComposerState("submitting")
         }}
       />
     </ChatConversation>
