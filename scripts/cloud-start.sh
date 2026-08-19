@@ -8,6 +8,13 @@ source "$ROOT/scripts/pg-env.sh"
 
 "$ROOT/scripts/postgres.sh" start
 
+# Hex packages can extract Erlang sources at Unix epoch. Mix then skips .erl
+# compilation on later boots when the install script is not re-run.
+if [[ -d "$ROOT/kino_app/deps" ]]; then
+  find "$ROOT/kino_app/deps" -type f \( -name '*.erl' -o -name '*.yrl' -o -name '*.xrl' \) \
+    -exec touch {} + 2>/dev/null || true
+fi
+
 cd "$ROOT/kino_app"
 mix ecto.create
 mix ecto.migrate
