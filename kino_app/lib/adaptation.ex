@@ -15,12 +15,12 @@ defmodule Adaptation do
   defdelegate adopt_adapter(domain, version, uri), to: AgentProcess
 
   def start_agent(opts) do
-    DynamicSupervisor.start_child(Kino.Adaptation.AgentSupervisor, {AgentProcess, opts})
+    DynamicSupervisor.start_child(Kino.Agent.DynamicSupervisor, {AgentProcess, opts})
   end
 
   def stop_agent(domain) do
-    case Registry.lookup(Kino.Adaptation.Registry, domain) do
-      [{pid, _}] -> DynamicSupervisor.terminate_child(Kino.Adaptation.AgentSupervisor, pid)
+    case Registry.lookup(Kino.Agent.Registry, domain) do
+      [{pid, _}] -> DynamicSupervisor.terminate_child(Kino.Agent.DynamicSupervisor, pid)
       [] -> {:error, :not_started}
     end
   end

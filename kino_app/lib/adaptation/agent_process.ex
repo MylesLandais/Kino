@@ -27,7 +27,7 @@ defmodule Adaptation.AgentProcess do
     GenServer.start_link(__MODULE__, opts, name: via(domain))
   end
 
-  def via(domain), do: {:via, Registry, {Kino.Adaptation.Registry, domain}}
+  def via(domain), do: {:via, Registry, {Kino.Agent.Registry, domain}}
 
   def current_adapter(domain), do: GenServer.call(via(domain), :current_adapter)
 

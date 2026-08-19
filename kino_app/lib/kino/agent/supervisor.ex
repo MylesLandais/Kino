@@ -1,8 +1,8 @@
-defmodule Kino.Adaptation.Supervisor do
+defmodule Kino.Agent.Supervisor do
   @moduledoc """
-  Kino-named supervision for the Adaptation / Agent Process layers.
+  `/agent` supervision tree.
 
-  `Kino.Adaptation.Registry` + `Kino.Adaptation.AgentSupervisor` sit next to
+  `Kino.Agent.Registry` + `Kino.Agent.DynamicSupervisor` sit next to
   `Kino.TaskSupervisor` / `Kino.Theater.RoomSession`. Training jobs use Oban's
   `adaptation` queue, not this DynamicSupervisor, so a failed train cannot
   take down an agent.
@@ -17,8 +17,8 @@ defmodule Kino.Adaptation.Supervisor do
   @impl true
   def init(_opts) do
     children = [
-      {Registry, keys: :unique, name: Kino.Adaptation.Registry},
-      {DynamicSupervisor, name: Kino.Adaptation.AgentSupervisor, strategy: :one_for_one}
+      {Registry, keys: :unique, name: Kino.Agent.Registry},
+      {DynamicSupervisor, name: Kino.Agent.DynamicSupervisor, strategy: :one_for_one}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

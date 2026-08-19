@@ -16,7 +16,7 @@ defmodule Kino.Application do
       Kino.Avatar.Seeder,
       {Oban, Application.fetch_env!(:kino, Oban)},
       {Task.Supervisor, name: Kino.TaskSupervisor},
-      Kino.Adaptation.Supervisor,
+      Kino.Agent.Supervisor,
       Kino.Theater.RoomSession,
       KinoWeb.Endpoint
     ]
