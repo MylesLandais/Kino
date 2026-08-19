@@ -1,5 +1,11 @@
 This is a web application written using the Phoenix web framework.
 
+## Nix / Cloud Agents
+
+Run Kino through the repository-root FHS shell (`./launch.sh` or `nix run .#fhs -- …`). That shell provides Elixir, Node, PostgreSQL 19 (SQL/PGQ), and the libraries Mix/npm binaries expect. Do not install Homebrew/apt copies of those tools for this app.
+
+PostgreSQL is the user-space cluster from `scripts/postgres.sh` (`PGHOST` unix socket). After migrate, `ontology_graph` is available for `GRAPH_TABLE` queries. Default local login is `admin` / `admin`.
+
 ## Project guidelines
 
 - Use `mix precommit` alias when you are done with all changes and fix any pending issues

@@ -2,21 +2,20 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+source "$ROOT/scripts/nix-env.sh"
+"$ROOT/scripts/ensure-nix-daemon.sh"
 
-if [[ -z "${KINO_NIX_SHELL:-}" && -z "${KINO_NIX_REEXEC:-}" ]] && command -v nix >/dev/null 2>&1; then
-  exec env KINO_NIX_REEXEC=1 nix develop "path:$ROOT" -c "$ROOT/launch.sh" "$@"
+if [[ -z "${KINO_FHS:-}" && -z "${KINO_NIX_REEXEC:-}" ]] && command -v nix >/dev/null 2>&1; then
+  exec env KINO_NIX_REEXEC=1 nix run "path:$ROOT#fhs" -- "$ROOT/launch.sh" "$@"
 fi
 
 if ! command -v mix >/dev/null 2>&1; then
-  echo "Kino requires Elixir. Install Nix or run this script from the Kino dev shell." >&2
+  echo "Kino requires the Nix FHS shell (Elixir). Install Nix, then run ./launch.sh again." >&2
   exit 1
 fi
 
-if ! pg_isready -q; then
-  echo "PostgreSQL is not accepting local Unix-socket connections." >&2
-  echo "Start the host PostgreSQL service, then run ./launch.sh again." >&2
-  exit 1
-fi
+"$ROOT/scripts/postgres.sh" start
 
 cd "$ROOT/kino_app"
 mix setup

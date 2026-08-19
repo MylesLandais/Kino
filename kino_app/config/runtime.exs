@@ -22,8 +22,21 @@ end
 
 config :kino, KinoWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
-if database_url = System.get_env("DATABASE_URL") do
-  config :kino, Kino.Repo, url: database_url
+cond do
+  database_url = System.get_env("DATABASE_URL") ->
+    config :kino, Kino.Repo, url: database_url
+
+  socket_dir = System.get_env("PGHOST") ->
+    if String.starts_with?(socket_dir, "/") do
+      config :kino, Kino.Repo, socket_dir: socket_dir
+    end
+
+  true ->
+    :ok
+end
+
+if ytdlp_bin = System.get_env("KINO_YTDLP_BIN") do
+  config :kino, :media, ytdlp_bin: ytdlp_bin
 end
 
 if username = System.get_env("KINO_BOOTSTRAP_ADMIN_USERNAME") do
