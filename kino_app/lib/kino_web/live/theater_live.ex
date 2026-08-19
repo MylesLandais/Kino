@@ -2,8 +2,8 @@ defmodule KinoWeb.TheaterLive do
   use KinoWeb, :live_view
 
   alias Kino.Media
-  alias Kino.Media.LinkResolver
   alias Kino.Media.SetBroker
+  alias Kino.Theater.ChatCommands
   alias Kino.Theater.RoomSession
 
   # Keep only the most recent messages in the stream (negative = keep tail).
@@ -68,75 +68,18 @@ defmodule KinoWeb.TheaterLive do
       |> assign(:form, to_form(%{"message" => ""}))
       |> assign(:command_hint, nil)
 
-    cond do
-      text == "" ->
+    case ChatCommands.execute(text, socket.assigns.current_scope.user) do
+      {:error, reason} ->
+        Media.broadcast_agent(:error, "Could not process message — #{inspect(reason)}")
         {:noreply, socket}
 
-      String.starts_with?(text, "/play ") ->
-        url = text |> String.trim_leading("/play ") |> String.trim()
-        Media.broadcast({:chat_message, message(:user, text, user: socket.assigns.username)})
-
-        case Media.request_play(url, socket.assigns.username) do
-          {:ok, _asset} ->
-            {:noreply, socket}
-
-          {:error, reason} ->
-            reason = if is_binary(reason), do: reason, else: inspect(reason)
-
-            Media.broadcast_agent(:error, "Could not queue request — #{reason}", %{
-              url: url
-            })
-
-            {:noreply, socket}
-        end
-
-      String.starts_with?(text, "/wish ") ->
-        query = text |> String.trim_leading("/wish ") |> String.trim()
-        Media.broadcast({:chat_message, message(:user, text, user: socket.assigns.username)})
-
-        case LinkResolver.parse_query(query) do
-          {:ok, recording} ->
-            Media.broadcast_agent(:working, "Searching seven music platforms…", %{
-              artist: recording.artist,
-              title: recording.title,
-              threshold: "80%"
-            })
-
-            Task.Supervisor.start_child(Kino.TaskSupervisor, fn -> resolve_wish(query) end)
-            {:noreply, socket}
-
-          {:error, reason} ->
-            Media.broadcast_agent(:error, reason)
-            {:noreply, socket}
-        end
-
-      text == "/pause" ->
-        RoomSession.set_desired(:paused)
-        {:noreply, socket}
-
-      text == "/resume" ->
-        RoomSession.set_desired(:playing)
-        {:noreply, socket}
-
-      true ->
-        Media.broadcast({:chat_message, message(:user, text, user: socket.assigns.username)})
-
-        if Kino.Accounts.allowed?(socket.assigns.current_scope.user, "avatar:trigger") do
-          if asset = Kino.Avatar.match_motion(text), do: Kino.Avatar.trigger(asset)
-        end
-
+      _ ->
         {:noreply, socket}
     end
   end
 
   def handle_event("command_changed", %{"message" => text}, socket) do
-    hint =
-      cond do
-        String.starts_with?(text, "/play") -> "/play <video-url> — fetch and cache with yt-dlp"
-        String.starts_with?(text, "/wish") -> "/wish Artist — Track — resolve ≥80% platform links"
-        String.starts_with?(text, "/") -> "command: #{text}"
-        true -> nil
-      end
+    hint = ChatCommands.command_hint(text)
 
     {:noreply,
      socket
@@ -623,43 +566,6 @@ defmodule KinoWeb.TheaterLive do
     end
   end
 
-  defp resolve_wish(query) do
-    case SetBroker.resolve_query(query) do
-      {:ok, %{recording: recording, matches: []}} ->
-        Media.broadcast_agent(
-          :error,
-          "No platform returned an 80% match for #{recording.artist} — #{recording.title}."
-        )
-
-      {:ok, %{recording: recording, matches: matches}} ->
-        links =
-          matches
-          |> Enum.sort_by(&to_string(&1.platform))
-          |> Enum.map_join("\n", fn match ->
-            confidence = round(match.confidence * 100)
-            "#{platform_label(match.platform)} #{confidence}% — #{match.url}"
-          end)
-
-        Media.broadcast_agent(
-          :success,
-          "Links for #{recording.artist} — #{recording.title}:\n#{links}",
-          %{matched: length(matches), checked: length(LinkResolver.providers())}
-        )
-
-      {:error, reason} ->
-        Media.broadcast_agent(:error, reason)
-    end
-  rescue
-    error -> Media.broadcast_agent(:error, "Platform lookup failed — #{Exception.message(error)}")
-  end
-
-  defp platform_label(platform) do
-    platform
-    |> to_string()
-    |> String.replace("_", " ")
-    |> String.upcase()
-  end
-
   defp push_playback(%{assigns: %{playback: %{src: nil}}} = socket), do: socket
 
   defp push_playback(socket) do
@@ -816,6 +722,13 @@ defmodule KinoWeb.TheaterLive do
   end
 
   defp number(_), do: 0.0
+
+  defp platform_label(platform) do
+    platform
+    |> to_string()
+    |> String.replace("_", " ")
+    |> String.upcase()
+  end
 
   defp state_icon(:pending), do: "○"
   defp state_icon(:working), do: "◌"
