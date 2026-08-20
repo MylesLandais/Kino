@@ -10,16 +10,18 @@ defmodule KinoWeb.TheaterLive do
 
   @impl true
   def mount(_params, session, socket) do
-    user = Kino.Accounts.user_for_session(session["auth_token"])
+    auth_token = session["auth_token"]
+    user = Kino.Accounts.user_for_session(auth_token)
     username = user && user.username
 
     if is_nil(username) do
-      {:ok, assign(socket, page_title: "Join", username: nil, current_scope: nil)}
+      {:ok, assign(socket, page_title: "Join", username: nil, current_scope: nil, auth_token: nil)}
     else
       {:ok,
        socket
        |> assign(:page_title, "Theater")
        |> assign(:username, username)
+       |> assign(:auth_token, auth_token)
        |> assign(:current_scope, %{user: user})}
     end
   end
@@ -70,6 +72,7 @@ defmodule KinoWeb.TheaterLive do
         phx-hook="TintTheater"
         phx-update="ignore"
         data-username={@username}
+        data-auth-token={@auth_token}
       />
     </Layouts.app>
     """

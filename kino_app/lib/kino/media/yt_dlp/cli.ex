@@ -63,7 +63,10 @@ defmodule Kino.Media.YtDlp.Cli do
     tmp_path = dest_path <> ".part.mp4"
     File.mkdir_p!(Path.dirname(dest_path))
 
-    args = [
+    # YouTube's 403 on video data is common from datacenter IPs. We try
+    # multiple player clients (android, web) and enable JS runtime for
+    # signature challenges. See https://github.com/yt-dlp/yt-dlp/wiki/YouTube
+    base_args = [
       "-f",
       @format,
       "--no-playlist",
@@ -71,19 +74,65 @@ defmodule Kino.Media.YtDlp.Cli do
       "mp4",
       "--newline",
       "--progress",
+      "--extractor-args",
+      "youtube:player_client=android,web",
+      "--js-runtimes",
+      "node",
       "-o",
       tmp_path,
       url
     ]
+
+    args =
+      if Keyword.get(opts, :retry_web, false) do
+        # Retry with web client only
+        [
+          "-f",
+          @format,
+          "--no-playlist",
+          "--merge-output-format",
+          "mp4",
+          "--newline",
+          "--progress",
+          "--extractor-args",
+          "youtube:player_client=web",
+          "--js-runtimes",
+          "node",
+          "-o",
+          tmp_path,
+          url
+        ]
+      else
+        base_args
+      end
 
     case run_streaming(args, Keyword.get(opts, :progress), @download_timeout) do
       {:ok, {_, 0}} ->
         File.rename!(tmp_path, dest_path)
         :ok
 
-      {:ok, {output, _code}} ->
+      {:ok, {output, code}} ->
         File.rm(tmp_path)
-        {:error, error_tail(output)}
+
+        # YouTube 403 is often transient/IP-blocked; retry once with web client
+        if code != 0 and String.contains?(output, "HTTP Error 403") and
+             not Keyword.get(opts, :retry_web, false) do
+          Logger.warning("yt-dlp 403, retrying with web client for #{url}")
+
+          download(url, dest_path, Keyword.put(opts, :retry_web, true))
+        else
+          # Provide actionable hint for 403
+          reason = error_tail(output)
+
+          hint =
+            if String.contains?(output, "HTTP Error 403") do
+              " (YouTube 403: datacenter IP blocked or video requires cookies/PO token. Try updating yt-dlp, adding --cookies-from-browser, or using a residential proxy. See https://github.com/yt-dlp/yt-dlp/wiki/YouTube)"
+            else
+              ""
+            end
+
+          {:error, reason <> hint}
+        end
 
       {:error, :timeout} ->
         File.rm(tmp_path)

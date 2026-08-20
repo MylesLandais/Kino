@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {formatTime} from "tint/media"
 
 import {AgentClient} from "./agent_client"
@@ -16,8 +16,12 @@ const defaultPlayback: PlaybackState = {
   position: 0,
 }
 
-export function TintTheaterApp() {
-  const client = useMemo(() => new AgentClient(), [])
+type TintTheaterAppProps = {
+  authToken?: string | null
+}
+
+export function TintTheaterApp({authToken}: TintTheaterAppProps = {}) {
+  const client = useMemo(() => new AgentClient({authToken: authToken || undefined}), [authToken])
   const chat = useTheaterChatState()
 
   const [playback, setPlayback] = useState<PlaybackState>(defaultPlayback)

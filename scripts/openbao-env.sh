@@ -26,7 +26,7 @@ if [[ -z "$kino_openbao_addr" || -z "$kino_openbao_path" ]]; then
 fi
 
 if ! command -v bao >/dev/null 2>&1; then
-  echo "openbao-env: bao is not on PATH; enter the Nix FHS shell" >&2
+  echo "openbao-env: bao is not on PATH; enter the Nix dev shell (nix develop / nix-shell) if you need OpenBao" >&2
   if [[ "${KINO_OPENBAO_REQUIRED:-}" == "1" ]]; then
     return 1 2>/dev/null || exit 1
   fi

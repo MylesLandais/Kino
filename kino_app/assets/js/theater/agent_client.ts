@@ -19,10 +19,15 @@ export class AgentClient {
   socket: Socket
   channel: Channel | null = null
   handlers: AgentClientHandlers
+  authToken?: string
 
-  constructor(handlers: AgentClientHandlers = {}) {
-    this.handlers = handlers
-    this.socket = new Socket("/agent", {params: {}})
+  constructor(handlers: AgentClientHandlers & {authToken?: string} = {}) {
+    const {authToken, ...rest} = handlers as AgentClientHandlers & {authToken?: string}
+    this.handlers = rest
+    this.authToken = authToken
+    const params: Record<string, string> = {}
+    if (authToken) params.auth_token = authToken
+    this.socket = new Socket("/agent", {params})
   }
 
   connect() {

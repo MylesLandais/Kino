@@ -105,7 +105,10 @@ defmodule Kino.MixProject do
   end
 
   defp external_asset_tools? do
-    System.get_env("MIX_TAILWIND_PATH") not in [nil, ""] and
-      System.get_env("MIX_ESBUILD_PATH") not in [nil, ""]
+    (System.get_env("MIX_TAILWIND_PATH") not in [nil, ""] and
+       System.get_env("MIX_ESBUILD_PATH") not in [nil, ""]) or
+      (System.get_env("IN_NIX_SHELL") not in [nil, ""] and
+         System.find_executable("tailwindcss") not in [nil, ""] and
+         System.find_executable("esbuild") not in [nil, ""])
   end
 end

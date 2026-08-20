@@ -8,8 +8,13 @@ source "$ROOT/scripts/nix-env.sh"
 source "$ROOT/scripts/pg-env.sh"
 
 if ! command -v initdb >/dev/null 2>&1 || ! command -v pg_ctl >/dev/null 2>&1; then
-  echo "PostgreSQL 19 tools are not on PATH. Enter the Kino FHS shell first:" >&2
-  echo "  nix run path:$ROOT#fhs -- $0 ${1:-start}" >&2
+  if [[ -z "${IN_NIX_SHELL:-}" ]] && command -v nix >/dev/null 2>&1; then
+    echo "PostgreSQL 19 tools not on PATH, re-entering Nix dev shell..." >&2
+    exec nix develop --command "$0" "$@"
+  fi
+  echo "PostgreSQL 19 tools are not on PATH. Enter the dev shell first:" >&2
+  echo "  nix develop -c $0 ${1:-start}" >&2
+  echo "  # or: nix-shell --run \"$0 ${1:-start}\"" >&2
   exit 1
 fi
 
