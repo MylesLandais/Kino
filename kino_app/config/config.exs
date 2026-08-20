@@ -14,7 +14,14 @@ config :kino,
 config :kino, Oban,
   engine: Oban.Engines.Basic,
   repo: Kino.Repo,
-  queues: [media: 2, enrichment: 4, catalog: 2]
+  queues: [media: 2, enrichment: 4, catalog: 2, adaptation: 1]
+
+# Adaptation Substrate: training is offline and provider-swappable.
+# Live agents hold an adapter *reference* only — never weights.
+config :kino, Adaptation,
+  provider: Adaptation.Providers.LoRA,
+  train_bin: Path.expand("../../scripts/vastai-lora-train", __DIR__),
+  eval_bin: Path.expand("../../scripts/vastai-lora-eval", __DIR__)
 
 config :kino, :media,
   cache_dir: nil,

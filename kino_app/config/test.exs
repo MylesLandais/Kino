@@ -15,6 +15,11 @@ config :kino, :media,
   # Resolve inline so tests stay deterministic and inside the DB sandbox.
   resolve_mode: :sync
 
+config :kino, Adaptation,
+  provider: Adaptation.Providers.Mock,
+  train_bin: Path.expand("../../scripts/vastai-lora-train", __DIR__),
+  eval_bin: Path.expand("../../scripts/vastai-lora-eval", __DIR__)
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :kino, KinoWeb.Endpoint,

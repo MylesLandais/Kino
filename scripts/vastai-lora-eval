@@ -1,0 +1,3 @@
+#!/bin/sh
+# Thin PATH entry for Adaptation.Providers.LoRA.
+exec python3 "$(CDPATH= cd -- "$(dirname "$0")" && pwd)/vastai_lora.py" eval "$@"

@@ -34,3 +34,5 @@ nix run "path:$PWD#fhs" -- bash -lc 'cd kino_app && mix precommit'
 ```
 
 The Figma/React design source is preserved under `prototypes/figma-theater/`; Phoenix LiveView in `kino_app/` is the production implementation.
+
+The OTP agent harness (DeepSeek/Cordis ideas, not a TypeScript port) lives in `harness/`. See `harness/ARCHITECTURE.md`.
