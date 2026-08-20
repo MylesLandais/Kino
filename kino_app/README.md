@@ -8,7 +8,7 @@ Application-specific commands can be run with:
 nix develop "path:$PWD/.." -c bash -lc 'cd kino_app && mix test'
 ```
 
-Production uses durable PostgreSQL and S3-compatible object storage. Configure:
+Production uses durable PostgreSQL and S3-compatible object storage. Those values live in **OpenBao** (KV fields with the same names). Export `BAO_ADDR`, `BAO_TOKEN`, and `KINO_OPENBAO_PATH`, or source `scripts/openbao-env.sh` from the repo root. Configure:
 
 ```bash
 DATABASE_URL=ecto://user:pass@postgres/maya

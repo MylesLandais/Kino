@@ -1,7 +1,7 @@
 import Config
 
 config :kino, Kino.Repo,
-  socket_dir: "/run/postgresql",
+  socket_dir: System.get_env("PGHOST", "/run/postgresql"),
   database: "kino_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 4

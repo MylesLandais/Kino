@@ -1,0 +1,18 @@
+{
+  "name": "Kino FHS Nix",
+  "install": "./scripts/with-fhs.sh ./scripts/cloud-install.sh",
+  "start": "./scripts/with-fhs.sh ./scripts/cloud-start.sh",
+  "ports": [
+    {
+      "name": "phoenix",
+      "port": 4000
+    }
+  ],
+  "terminals": [
+    {
+      "name": "phoenix",
+      "command": "./scripts/with-fhs.sh ./launch.sh",
+      "description": "Phoenix LiveView theater (Nix FHS + PostgreSQL 19 SQL/PGQ + OpenBao secrets) at http://localhost:4000"
+    }
+  ]
+}

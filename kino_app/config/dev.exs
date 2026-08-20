@@ -1,8 +1,9 @@
 import Config
 
-# Local Postgres uses unix-socket peer auth (TCP requires a password)
+# Local Postgres uses unix-socket peer auth (TCP requires a password).
+# The Nix FHS shell exports PGHOST to the Kino-managed PostgreSQL 19 cluster.
 config :kino, Kino.Repo,
-  socket_dir: "/run/postgresql",
+  socket_dir: System.get_env("PGHOST", "/run/postgresql"),
   database: "kino_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -20,9 +21,7 @@ config :kino,
        :avatar_bootstrap_dir,
        Path.expand("../../../Workspace-git/maya-unified/data", __DIR__)
 
-# yt-dlp is not on PATH on this NixOS host; pin the store path
-config :kino, :media,
-  ytdlp_bin: "/nix/store/h0nz3gf86c78gmw0nkzi0hdc5ry4z25i-yt-dlp-2026.06.09/bin/yt-dlp"
+config :kino, :media, ytdlp_bin: System.get_env("KINO_YTDLP_BIN", "yt-dlp")
 
 # For development, we disable any cache and enable
 # debugging and code reloading.

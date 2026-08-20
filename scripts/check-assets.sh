@@ -2,9 +2,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck disable=SC1091
+source "$ROOT/scripts/nix-env.sh"
+"$ROOT/scripts/ensure-nix-daemon.sh"
 
-if [[ -z "${KINO_NIX_SHELL:-}" && -z "${KINO_NIX_REEXEC:-}" ]] && command -v nix >/dev/null 2>&1; then
-  exec env KINO_NIX_REEXEC=1 nix develop "path:$ROOT" -c "$ROOT/scripts/check-assets.sh"
+if [[ -z "${KINO_FHS:-}" && -z "${KINO_NIX_REEXEC:-}" ]] && command -v nix >/dev/null 2>&1; then
+  exec env KINO_NIX_REEXEC=1 nix run "path:$ROOT#fhs" -- "$ROOT/scripts/check-assets.sh"
 fi
 
 cd "$ROOT/kino_app"
