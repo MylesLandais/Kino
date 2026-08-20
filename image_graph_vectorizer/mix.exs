@@ -22,6 +22,7 @@ defmodule ImageGraphVectorizer.MixProject do
     [
       # Neo4j Driver
       {:bolt_sips, "~> 2.0"},
+      {:db_connection, "~> 2.6.0", override: true},
       
       # File System Watcher
       {:file_system, "~> 1.0"},
@@ -33,10 +34,7 @@ defmodule ImageGraphVectorizer.MixProject do
       {:jason, "~> 1.4"},
       
       # UUID Generation
-      {:uuid, "~> 1.1"},
-      
-      # Testing
-      {:ex_unit, "~> 1.14", only: :test}
+      {:uuid, "~> 1.1"}
     ]
   end
 end
