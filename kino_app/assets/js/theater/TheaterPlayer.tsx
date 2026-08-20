@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {VideoPlayer} from "tint/video-player"
 
 import type {AgentClient} from "./agent_client"

@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import AvatarEngine from "../avatar/engine"
 
 type Props = {

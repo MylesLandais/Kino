@@ -1,4 +1,4 @@
-import {useEffect, useRef} from "react"
+import React, {useEffect, useRef} from "react"
 import {formatTime} from "tint/media"
 
 import type {AgentClient} from "./agent_client"

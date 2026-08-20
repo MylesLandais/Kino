@@ -56,12 +56,27 @@ config :phoenix_live_view,
   # the attribute set on all root tags. Used for Phoenix.LiveView.ColocatedCSS.
   root_tag_attribute: "phx-r"
 
-if path = System.get_env("MIX_ESBUILD_PATH") do
-  config :esbuild, path: path, version_check: false
+# Prefer Nix-provided binaries on NixOS to avoid stub-ld generic binaries.
+# The devShell sets MIX_ESBUILD_PATH/MIX_TAILWIND_PATH, but fallback to PATH lookup
+# when running inside nix develop without explicit env (e.g. via `nix run`).
+esbuild_path =
+  System.get_env("MIX_ESBUILD_PATH") ||
+    (if System.get_env("IN_NIX_SHELL") not in [nil, ""] do
+       System.find_executable("esbuild")
+     end)
+
+if esbuild_path not in [nil, ""] and File.exists?(esbuild_path) do
+  config :esbuild, path: esbuild_path, version_check: false
 end
 
-if path = System.get_env("MIX_TAILWIND_PATH") do
-  config :tailwind, path: path, version_check: false
+tailwind_path =
+  System.get_env("MIX_TAILWIND_PATH") ||
+    (if System.get_env("IN_NIX_SHELL") not in [nil, ""] do
+       System.find_executable("tailwindcss")
+     end)
+
+if tailwind_path not in [nil, ""] and File.exists?(tailwind_path) do
+  config :tailwind, path: tailwind_path, version_check: false
 end
 
 # Configure esbuild (the version is required)
@@ -69,7 +84,7 @@ config :esbuild,
   version: "0.25.4",
   kino: [
     args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=. --jsx=automatic),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
