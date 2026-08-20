@@ -2,11 +2,11 @@ This is a web application written using the Phoenix web framework.
 
 ## Nix / Cloud Agents
 
-Run Kino through the repository-root FHS shell (`./launch.sh` or `nix run .#fhs -- …`). That shell provides Elixir, Node, PostgreSQL 19 (SQL/PGQ), and the libraries Mix/npm binaries expect. Do not install Homebrew/apt copies of those tools for this app.
+Run Kino through the repository-root Nix dev shell (`./launch.sh` or `nix develop`). That shell provides Elixir, Node, PostgreSQL 19 (SQL/PGQ), and the libraries Mix/npm binaries expect. Do not install Homebrew/apt copies of those tools for this app.
 
 PostgreSQL is the user-space cluster from `scripts/postgres.sh` (`PGHOST` unix socket). After migrate, `ontology_graph` is available for `GRAPH_TABLE` queries. Default local login is `admin` / `admin`.
 
-Application secrets are stored in **OpenBao**, not in the repository. The FHS shell provides the `bao` CLI. Set `BAO_ADDR`, `BAO_TOKEN`, and `KINO_OPENBAO_PATH`, then source `scripts/openbao-env.sh` (launch and Cloud start already do). Do not add `.env` files or commit credentials.
+Application secrets are stored in **OpenBao**, not in the repository. Set `BAO_ADDR`, `BAO_TOKEN`, and `KINO_OPENBAO_PATH`, then source `scripts/openbao-env.sh` (launch and Cloud start already do). Do not add `.env` files or commit credentials.
 
 ## Project guidelines
 
