@@ -15,6 +15,9 @@ defmodule KinoWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
+  # Agent workbench websocket (used by the Tint/React client).
+  socket "/agent", KinoWeb.AgentSocket, websocket: [connect_info: [session: @session_options]]
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),

@@ -2,6 +2,9 @@
   "private": true,
   "dependencies": {
     "@pixiv/three-vrm": "3.4.2",
-    "three": "0.180.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "0.180.0",
+    "tint": "github:MylesLandais/Tint"
   }
 }
